@@ -1,5 +1,7 @@
 package act.di.guice;
 
+import act.app.App;
+import act.app.AppServiceBase;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -13,12 +15,20 @@ import java.util.List;
 /**
  * Implement {@link DependencyInjector}
  */
-public class GuiceDependencyInjector implements DependencyInjector<GuiceDependencyInjector> {
+public class GuiceDependencyInjector extends AppServiceBase<GuiceDependencyInjector> implements DependencyInjector<GuiceDependencyInjector> {
 
     volatile Injector injector;
     List<Module> modules = C.newList();
 
-    public GuiceDependencyInjector() {
+    public GuiceDependencyInjector(App app) {
+        super(app);
+        app.injector(this);
+    }
+
+    @Override
+    protected void releaseResources() {
+        modules.clear();
+        injector = null;
     }
 
     public void addModule(Module module) {

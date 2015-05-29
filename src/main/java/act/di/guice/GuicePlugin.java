@@ -1,38 +1,35 @@
 package act.di.guice;
 
 import act.app.App;
-import act.app.AppByteCodeScanner;
-import act.app.AppSourceCodeScanner;
 import act.di.DependencyInjector;
-import act.util.AppCodeScannerPluginBase;
+import act.util.SubTypeFinder;
+import com.google.inject.AbstractModule;
+import org.osgl._;
+import org.osgl.exception.NotAppliedException;
 
-public class GuicePlugin extends AppCodeScannerPluginBase {
+public class GuicePlugin extends SubTypeFinder {
 
-    @Override
-    public AppSourceCodeScanner createAppSourceCodeScanner(App app) {
-        DependencyInjector injector = app.injector();
-        if (null != injector && !(injector instanceof GuiceDependencyInjector)) {
-            return null;
-        }
-        return new GuiceSourceCodeSensor();
-    }
-
-    @Override
-    public AppByteCodeScanner createAppByteCodeScanner(App app) {
-        DependencyInjector injector = app.injector();
-        if (null != injector && !(injector instanceof GuiceDependencyInjector)) {
-            return null;
-        }
-        return new GuiceByteCodeSensor();
+    public GuicePlugin() {
+        super(AbstractModule.class, new _.F2<App, String, Void>() {
+            @Override
+            public Void apply(App app, String className) throws NotAppliedException, _.Break {
+                DependencyInjector injector = app.injector();
+                if (null == injector) {
+                    injector = new GuiceDependencyInjector(app);
+                    logger.info("Guice injector added to app");
+                }
+                GuiceDependencyInjector guiceInjector = (GuiceDependencyInjector)injector;
+                Class<? extends AbstractModule> c = _.classForName(className, app.classLoader());
+                AbstractModule module = _.newInstance(c);
+                guiceInjector.addModule(module);
+                logger.info("guice module %s added to the injector", className);
+                return null;
+            }
+        });
     }
 
     @Override
     public boolean load() {
-        try {
-            new GuiceByteCodeSensor();
-            return true;
-        } catch (Throwable e) {
-            return false;
-        }
+        return true;
     }
 }
