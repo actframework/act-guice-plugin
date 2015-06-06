@@ -22,7 +22,7 @@
   <groupId>org.actframework</groupId>
   <artifactId>act-guice</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
 
   <name>ACT Guice</name>
   <description>The Googele Guice Plugin for Actframework</description>
@@ -114,7 +114,7 @@
     <dependency>
       <groupId>org.actframework</groupId>
       <artifactId>act</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.0.2-SNAPSHOT</version>
     </dependency>
 
   </dependencies>
