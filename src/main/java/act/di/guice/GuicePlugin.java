@@ -1,18 +1,22 @@
 package act.di.guice;
 
 import act.app.App;
+import act.app.AppByteCodeScanner;
 import act.di.DependencyInjector;
 import act.util.SubTypeFinder;
 import com.google.inject.AbstractModule;
 import org.osgl._;
 import org.osgl.exception.NotAppliedException;
 
+import java.util.Map;
+import java.util.Set;
+
 public class GuicePlugin extends SubTypeFinder {
 
     public GuicePlugin() {
-        super(AbstractModule.class, new _.F2<App, String, Void>() {
+        super(AbstractModule.class, new _.F2<App, String, Map<Class<? extends AppByteCodeScanner>, Set<String>>>() {
             @Override
-            public Void apply(App app, String className) throws NotAppliedException, _.Break {
+            public Map<Class<? extends AppByteCodeScanner>, Set<String>> apply(App app, String className) throws NotAppliedException, _.Break {
                 DependencyInjector injector = app.injector();
                 if (null == injector) {
                     injector = new GuiceDependencyInjector(app);
