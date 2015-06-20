@@ -1,10 +1,10 @@
 package act.di.guice;
 
 import act.app.App;
-import act.app.AppServiceBase;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
+import act.app.AppContext;
+import act.conf.AppConfig;
+import act.di.DependencyInjectorBase;
+import com.google.inject.*;
 import org.osgl._;
 import act.di.DependencyInjector;
 import org.osgl.util.C;
@@ -15,14 +15,13 @@ import java.util.List;
 /**
  * Implement {@link DependencyInjector}
  */
-public class GuiceDependencyInjector extends AppServiceBase<GuiceDependencyInjector> implements DependencyInjector<GuiceDependencyInjector> {
+public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDependencyInjector> {
 
     volatile Injector injector;
     List<Module> modules = C.newList();
 
     public GuiceDependencyInjector(App app) {
         super(app);
-        app.injector(this);
     }
 
     @Override
@@ -46,12 +45,38 @@ public class GuiceDependencyInjector extends AppServiceBase<GuiceDependencyInjec
         }
     }
 
+    @Override
+    public DependencyInjector<GuiceDependencyInjector> createContextAwareInjector(AppContext appContext) {
+        // Now appContext local is always stored appContext.saveLocal();
+        return this;
+    }
+
     private Injector injector() {
-        if (modules.isEmpty()) {
-            return null;
-        }
         if (null == injector) {
             synchronized (this) {
+                modules.add(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(App.class).toProvider(new Provider<App>() {
+                            @Override
+                            public App get() {
+                                return app();
+                            }
+                        });
+                        bind(AppConfig.class).toProvider(new Provider<AppConfig>() {
+                            @Override
+                            public AppConfig get() {
+                                return app().config();
+                            }
+                        });
+                        bind(AppContext.class).toProvider(new Provider<AppContext>() {
+                            @Override
+                            public AppContext get() {
+                                return AppContext.current();
+                            }
+                        });
+                    }
+                });
                 if (null == injector) {
                     injector = Guice.createInjector(modules);
                 }
