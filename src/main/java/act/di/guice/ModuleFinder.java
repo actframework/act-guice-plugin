@@ -12,9 +12,9 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
-public class GuicePlugin extends SubTypeFinder {
+public class ModuleFinder extends SubTypeFinder {
 
-    public GuicePlugin() {
+    public ModuleFinder() {
         super(true, true, AbstractModule.class, new _.F2<App, String, Map<Class<? extends AppByteCodeScanner>, Set<String>>>() {
             @Override
             public Map<Class<? extends AppByteCodeScanner>, Set<String>> apply(App app, String className) throws NotAppliedException, _.Break {
