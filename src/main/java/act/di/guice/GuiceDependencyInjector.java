@@ -4,6 +4,7 @@ import act.app.App;
 import act.app.AppContext;
 import act.conf.AppConfig;
 import act.di.DependencyInjectorBase;
+import act.event.EventBus;
 import com.google.inject.*;
 import org.osgl._;
 import act.di.DependencyInjector;
@@ -73,6 +74,12 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                             @Override
                             public AppContext get() {
                                 return AppContext.current();
+                            }
+                        });
+                        bind(EventBus.class).toProvider(new Provider<EventBus>() {
+                            @Override
+                            public EventBus get() {
+                                return app().eventBus();
                             }
                         });
                     }
