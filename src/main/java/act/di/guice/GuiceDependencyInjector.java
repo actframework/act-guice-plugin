@@ -1,13 +1,13 @@
 package act.di.guice;
 
+import act.app.ActionContext;
 import act.app.App;
-import act.app.AppContext;
 import act.conf.AppConfig;
+import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
 import act.event.EventBus;
 import com.google.inject.*;
 import org.osgl._;
-import act.di.DependencyInjector;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
@@ -47,7 +47,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
     }
 
     @Override
-    public DependencyInjector<GuiceDependencyInjector> createContextAwareInjector(AppContext appContext) {
+    public DependencyInjector<GuiceDependencyInjector> createContextAwareInjector(ActionContext appContext) {
         // Now appContext local is always stored appContext.saveLocal();
         return this;
     }
@@ -70,10 +70,10 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                                 return app().config();
                             }
                         });
-                        bind(AppContext.class).toProvider(new Provider<AppContext>() {
+                        bind(ActionContext.class).toProvider(new Provider<ActionContext>() {
                             @Override
-                            public AppContext get() {
-                                return AppContext.current();
+                            public ActionContext get() {
+                                return ActionContext.current();
                             }
                         });
                         bind(EventBus.class).toProvider(new Provider<EventBus>() {
