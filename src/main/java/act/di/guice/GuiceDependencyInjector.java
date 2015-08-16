@@ -27,7 +27,6 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
 
     public GuiceDependencyInjector(App app) {
         super(app);
-        app.injector(this);
     }
 
     @Override

@@ -12,24 +12,29 @@ import java.util.EventObject;
 public class InjectorInitializer extends AppServicePlugin {
     @Override
     protected void applyTo(final App app) {
+        final Object lock = this;
         app.eventBus().bind(DiBinder.class, new ActEventListenerBase<DiBinder>() {
             @Override
             public void on(DiBinder event) throws Exception {
-                DependencyInjector injector = app.injector();
-                if (null == injector) {
-                    injector = new GuiceDependencyInjector(app);
-                } else if (!(injector instanceof GuiceDependencyInjector)) {
-                    return;
+                synchronized (InjectorInitializer.class) {
+                    DependencyInjector injector = app.injector();
+                    if (null == injector) {
+                        injector = new GuiceDependencyInjector(app);
+                    } else if (!(injector instanceof GuiceDependencyInjector)) {
+                        return;
+                    }
+                    ((GuiceDependencyInjector)injector).registerDiBinder(event);
                 }
-                ((GuiceDependencyInjector)injector).registerDiBinder(event);
             }
         });
         app.jobManager().beforeAppStart(new Runnable() {
             @Override
             public void run() {
-                DependencyInjector injector = app.injector();
-                if (null == injector) {
-                    new GuiceDependencyInjector(app);
+                synchronized (InjectorInitializer.class) {
+                    DependencyInjector injector = app.injector();
+                    if (null == injector) {
+                        new GuiceDependencyInjector(app);
+                    }
                 }
             }
         });
