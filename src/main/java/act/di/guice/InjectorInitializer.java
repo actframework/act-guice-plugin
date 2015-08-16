@@ -15,11 +15,13 @@ public class InjectorInitializer extends AppServicePlugin {
         app.eventBus().bind(DiBinder.class, new ActEventListenerBase<DiBinder>() {
             @Override
             public void on(DiBinder event) throws Exception {
-                GuiceDependencyInjector injector = app.injector();
+                DependencyInjector injector = app.injector();
                 if (null == injector) {
                     injector = new GuiceDependencyInjector(app);
+                } else if (!(injector instanceof GuiceDependencyInjector)) {
+                    return;
                 }
-                injector.registerDiBinder(event);
+                ((GuiceDependencyInjector)injector).registerDiBinder(event);
             }
         });
         app.jobManager().beforeAppStart(new Runnable() {
