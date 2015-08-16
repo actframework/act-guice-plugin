@@ -2,9 +2,11 @@ package act.di.guice;
 
 import act.app.ActionContext;
 import act.app.App;
+import act.app.util.AppCrypto;
 import act.conf.AppConfig;
 import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
+import act.di.DiBinder;
 import act.event.EventBus;
 import com.google.inject.*;
 import org.osgl._;
@@ -12,6 +14,7 @@ import org.osgl.util.C;
 import org.osgl.util.E;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implement {@link DependencyInjector}
@@ -20,9 +23,11 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
 
     volatile Injector injector;
     List<Module> modules = C.newList();
+    private Map<Class, DiBinder> binders = C.newMap();
 
     public GuiceDependencyInjector(App app) {
         super(app);
+        app.injector(this);
     }
 
     @Override
@@ -52,6 +57,10 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         return this;
     }
 
+    void registerDiBinder(DiBinder binder) {
+        binders.put(binder.targetClass(), binder);
+    }
+
     private Injector injector() {
         if (null == injector) {
             synchronized (this) {
@@ -70,6 +79,12 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                                 return app().config();
                             }
                         });
+                        bind(AppCrypto.class).toProvider(new Provider<AppCrypto>() {
+                            @Override
+                            public AppCrypto get() {
+                                return app().crypto();
+                            }
+                        });
                         bind(ActionContext.class).toProvider(new Provider<ActionContext>() {
                             @Override
                             public ActionContext get() {
@@ -82,6 +97,14 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                                 return app().eventBus();
                             }
                         });
+                        for (final Class key: binders.keySet()) {
+                            bind(key).toProvider(new Provider() {
+                                @Override
+                                public Object get() {
+                                    return binders.get(key).resolve(app());
+                                }
+                            });
+                        }
                     }
                 });
                 if (null == injector) {
