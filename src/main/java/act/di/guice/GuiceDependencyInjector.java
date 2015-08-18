@@ -2,6 +2,7 @@ package act.di.guice;
 
 import act.app.ActionContext;
 import act.app.App;
+import act.app.event.AppEventId;
 import act.app.util.AppCrypto;
 import act.conf.AppConfig;
 import act.di.DependencyInjector;
@@ -27,6 +28,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
 
     public GuiceDependencyInjector(App app) {
         super(app);
+        app.eventBus().emit(AppEventId.DEPENDENCY_INJECTOR_LOADED);
     }
 
     @Override

@@ -1,10 +1,12 @@
 package act.di.guice;
 
 import act.app.App;
+import act.app.event.AppEventId;
 import act.di.DependencyInjector;
 import act.di.DiBinder;
 import act.event.ActEventListener;
 import act.event.ActEventListenerBase;
+import act.event.AppEventListenerBase;
 import act.plugin.AppServicePlugin;
 
 import java.util.EventObject;
@@ -27,9 +29,9 @@ public class InjectorInitializer extends AppServicePlugin {
                 }
             }
         });
-        app.jobManager().beforeAppStart(new Runnable() {
+        app.eventBus().bind(AppEventId.APP_CODE_SCANNED, new AppEventListenerBase() {
             @Override
-            public void run() {
+            public void on(EventObject event) throws Exception {
                 synchronized (InjectorInitializer.class) {
                     DependencyInjector injector = app.injector();
                     if (null == injector) {
