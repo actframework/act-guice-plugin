@@ -9,6 +9,7 @@ import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
 import act.di.DiBinder;
 import act.event.EventBus;
+import act.mail.MailerContext;
 import com.google.inject.*;
 import org.osgl._;
 import org.osgl.util.C;
@@ -90,6 +91,12 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                             @Override
                             public ActionContext get() {
                                 return ActionContext.current();
+                            }
+                        });
+                        bind(MailerContext.class).toProvider(new Provider<MailerContext>() {
+                            @Override
+                            public MailerContext get() {
+                                return MailerContext.current();
                             }
                         });
                         bind(EventBus.class).toProvider(new Provider<EventBus>() {
