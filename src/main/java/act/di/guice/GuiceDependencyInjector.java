@@ -1,5 +1,6 @@
 package act.di.guice;
 
+import act.ActComponent;
 import act.app.ActionContext;
 import act.app.App;
 import act.app.event.AppEventId;
@@ -18,9 +19,12 @@ import org.osgl.util.E;
 import java.util.List;
 import java.util.Map;
 
+import static act.app.event.AppEventId.DEPENDENCY_INJECTOR_LOADED;
+
 /**
  * Implement {@link DependencyInjector}
  */
+@ActComponent
 public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDependencyInjector> {
 
     volatile Injector injector;
@@ -29,7 +33,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
 
     public GuiceDependencyInjector(App app) {
         super(app);
-        app.eventBus().emit(AppEventId.DEPENDENCY_INJECTOR_LOADED);
+        app.emit(DEPENDENCY_INJECTOR_LOADED);
     }
 
     @Override

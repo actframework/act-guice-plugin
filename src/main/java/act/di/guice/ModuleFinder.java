@@ -1,5 +1,6 @@
 package act.di.guice;
 
+import act.ActComponent;
 import act.app.App;
 import act.app.AppByteCodeScanner;
 import act.di.DependencyInjector;
@@ -13,6 +14,7 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
+@ActComponent
 public class ModuleFinder extends SubTypeFinder2<AbstractModule> {
 
     public ModuleFinder() {
