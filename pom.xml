@@ -22,7 +22,7 @@
   <groupId>org.actframework</groupId>
   <artifactId>act-guice</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
 
   <name>ACT Guice</name>
   <description>The Googele Guice Plugin for Actframework</description>
@@ -115,15 +115,11 @@
       <artifactId>jsr305</artifactId>
       <version>3.0.0</version>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>com.google.inject.extensions</groupId>-->
-      <!--<artifactId>guice-servlet</artifactId>-->
-      <!--<version>4.0</version>-->
-    <!--</dependency>-->
+
     <dependency>
       <groupId>org.actframework</groupId>
       <artifactId>act</artifactId>
-      <version>0.0.3-SNAPSHOT</version>
+      <version>0.1.0-SNAPSHOT</version>
     </dependency>
 
   </dependencies>
