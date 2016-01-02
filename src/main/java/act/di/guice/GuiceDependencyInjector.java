@@ -3,6 +3,7 @@ package act.di.guice;
 import act.ActComponent;
 import act.app.ActionContext;
 import act.app.App;
+import act.app.CliContext;
 import act.app.util.AppCrypto;
 import act.conf.AppConfig;
 import act.di.DependencyInjector;
@@ -111,6 +112,12 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                                 @Override
                                 public MailerContext get() {
                                     return MailerContext.current();
+                                }
+                            });
+                            bind(CliContext.class).toProvider(new Provider<CliContext>() {
+                                @Override
+                                public CliContext get() {
+                                    return CliContext.current();
                                 }
                             });
                             bind(EventBus.class).toProvider(new Provider<EventBus>() {
