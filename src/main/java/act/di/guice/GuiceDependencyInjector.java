@@ -10,18 +10,16 @@ import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
 import act.di.DiBinder;
 import act.event.EventBus;
-import act.job.AppJobManager;
 import act.mail.MailerContext;
 import act.util.ActContext;
 import com.google.inject.*;
+import com.google.inject.spi.InjectionListener;
 import org.osgl.$;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
 import java.util.List;
 import java.util.Map;
-
-import static act.app.event.AppEventId.DEPENDENCY_INJECTOR_LOADED;
 
 /**
  * Implement {@link DependencyInjector}
@@ -33,6 +31,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
     volatile AbstractModule tempModule;
     List<Module> modules = C.newList();
     private Map<Class, DiBinder> binders = C.newMap();
+    private Map<Class, List<Class<? extends InjectionListener>>> injectionListenerClasses = C.newMap();
 
     public GuiceDependencyInjector(App app) {
         super(app);
@@ -42,6 +41,8 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
     protected void releaseResources() {
         modules.clear();
         injector = null;
+        binders.clear();
+        injectionListenerClasses.clear();
     }
 
     public void addModule(Module module) {
@@ -57,6 +58,19 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         } else {
             return injector.getInstance(clazz);
         }
+    }
+
+    synchronized <T> void registerInjectionListenerClass(Class<T> type, Class<InjectionListener<T>> listenerClass) {
+        List<Class<? extends InjectionListener>> l = injectionListenerClasses.get(type);
+        if (null == l) {
+            l = C.newList();
+            injectionListenerClasses.put(type, l);
+        }
+        l.add(listenerClass);
+    }
+
+    synchronized List<Class<? extends InjectionListener>> injectionListeners(Class<?> keyClass) {
+        return injectionListenerClasses.get(keyClass);
     }
 
     @Override
@@ -137,6 +151,12 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                         }
                     };
                     modules.add(tempModule);
+                    modules.add(new AbstractModule() {
+                        @Override
+                        protected void configure() {
+                            install(new DaoInjectionHelper(GuiceDependencyInjector.this));
+                        }
+                    });
                     injector = Guice.createInjector(modules);
                 }
             }
