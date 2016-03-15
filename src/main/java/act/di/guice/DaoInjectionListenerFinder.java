@@ -3,11 +3,10 @@ package act.di.guice;
 import act.app.App;
 import act.app.event.AppEventId;
 import act.db.Dao;
-import act.util.SubTypeFinder2;
-import com.google.inject.spi.InjectionListener;
+import act.util.SubTypeFinder;
 import org.osgl.$;
 
-public class DaoInjectionListenerFinder extends SubTypeFinder2<DaoInjectionListener> {
+public class DaoInjectionListenerFinder extends SubTypeFinder<DaoInjectionListener> {
 
     public DaoInjectionListenerFinder() {
         super(DaoInjectionListener.class);

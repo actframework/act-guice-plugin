@@ -4,11 +4,14 @@ import act.ActComponent;
 import act.app.ActionContext;
 import act.app.App;
 import act.app.CliContext;
+import act.app.event.AppEventId;
+import act.app.event.AppEventListener;
 import act.app.util.AppCrypto;
 import act.conf.AppConfig;
 import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
 import act.di.DiBinder;
+import act.event.AppEventListenerBase;
 import act.event.EventBus;
 import act.mail.MailerContext;
 import act.util.ActContext;
@@ -18,6 +21,7 @@ import org.osgl.$;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
+import java.util.EventObject;
 import java.util.List;
 import java.util.Map;
 
@@ -28,13 +32,20 @@ import java.util.Map;
 public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDependencyInjector> {
 
     volatile Injector injector;
-    volatile AbstractModule tempModule;
     List<Module> modules = C.newList();
     private Map<Class, DiBinder> binders = C.newMap();
+    // store binder mapping after the injector has been created
+    private Map<Class, DiBinder> additionalBinders = C.newMap();
     private Map<Class, List<Class<? extends InjectionListener>>> injectionListenerClasses = C.newMap();
 
     public GuiceDependencyInjector(App app) {
         super(app);
+        app.eventBus().bind(AppEventId.SINGLETON_PROVISIONED, new AppEventListenerBase() {
+            @Override
+            public void on(EventObject event) throws Exception {
+                processAdditionalBinders();
+            }
+        });
     }
 
     @Override
@@ -42,6 +53,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         modules.clear();
         injector = null;
         binders.clear();
+        additionalBinders.clear();
         injectionListenerClasses.clear();
     }
 
@@ -79,23 +91,40 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         return this;
     }
 
-    void registerDiBinder(DiBinder binder) {
-        binders.put(binder.targetClass(), binder);
-        // new DiBinder added, need to reset the injector state
-        injector = null;
-        if (null != tempModule) {
-            modules.remove(tempModule);
+    synchronized void registerDiBinder(DiBinder binder) {
+        if (null == injector) {
+            binders.put(binder.targetClass(), binder);
+        } else {
+            additionalBinders.put(binder.targetClass(), binder);
         }
+    }
+
+    private synchronized void processAdditionalBinders() {
+        if (additionalBinders.isEmpty()) {
+            return;
+        }
+        AbstractModule module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                for (final Class key: additionalBinders.keySet()) {
+                    bind(key).toProvider(new Provider() {
+                        @Override
+                        public Object get() {
+                            return additionalBinders.get(key).resolve(app());
+                        }
+                    });
+                }
+            }
+        };
+        injector = injector.createChildInjector(module);
     }
 
     private Injector injector() {
         if (null == injector) {
             synchronized (this) {
                 if (null == injector) {
-                    if (null != tempModule) {
-                        modules.remove(tempModule);
-                    }
-                    tempModule = new AbstractModule() {
+                    final Module daoHelper = new DaoInjectionHelper(GuiceDependencyInjector.this);
+                    AbstractModule tempModule = new AbstractModule() {
                         @Override
                         protected void configure() {
                             bind(App.class).toProvider(new Provider<App>() {
@@ -154,7 +183,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                     modules.add(new AbstractModule() {
                         @Override
                         protected void configure() {
-                            install(new DaoInjectionHelper(GuiceDependencyInjector.this));
+                            install(daoHelper);
                         }
                     });
                     injector = Guice.createInjector(modules);

@@ -2,16 +2,17 @@ package act.di.guice;
 
 import act.ActComponent;
 import act.app.App;
+import act.app.event.AppEventId;
 import act.di.DependencyInjector;
-import act.util.SubTypeFinder2;
+import act.util.SubTypeFinder;
 import com.google.inject.AbstractModule;
 import org.osgl.$;
 
 @ActComponent
-public class ModuleFinder extends SubTypeFinder2<AbstractModule> {
+public class ModuleFinder extends SubTypeFinder<AbstractModule> {
 
     public ModuleFinder() {
-        super(AbstractModule.class);
+        super(AbstractModule.class, AppEventId.APP_CODE_SCANNED);
     }
 
     @Override
