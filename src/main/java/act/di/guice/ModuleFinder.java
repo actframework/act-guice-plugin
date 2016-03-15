@@ -12,7 +12,7 @@ import org.osgl.$;
 public class ModuleFinder extends SubTypeFinder<AbstractModule> {
 
     public ModuleFinder() {
-        super(AbstractModule.class, AppEventId.APP_CODE_SCANNED);
+        super(AbstractModule.class, AppEventId.CLASS_LOADED);
     }
 
     @Override

@@ -31,7 +31,7 @@ public class InjectorInitializer extends AppServicePlugin {
                 }
             }
         });
-        app.eventBus().bind(AppEventId.APP_CODE_SCANNED, new AppEventListenerBase() {
+        app.eventBus().bind(AppEventId.CLASS_LOADED, new AppEventListenerBase() {
             @Override
             public void on(EventObject event) throws Exception {
                 synchronized (InjectorInitializer.class) {
