@@ -11,8 +11,10 @@ import act.conf.AppConfig;
 import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
 import act.di.DiBinder;
+import act.di.DiListener;
 import act.event.AppEventListenerBase;
 import act.event.EventBus;
+import act.job.AppJobManager;
 import act.mail.MailerContext;
 import act.util.ActContext;
 import com.google.inject.*;
@@ -36,7 +38,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
     private Map<Class, DiBinder> binders = C.newMap();
     // store binder mapping after the injector has been created
     private Map<Class, DiBinder> additionalBinders = C.newMap();
-    private Map<Class, List<Class<? extends InjectionListener>>> injectionListenerClasses = C.newMap();
+    private Map<Class, List<Class<? extends DiListener>>> injectionListenerClasses = C.newMap();
 
     public GuiceDependencyInjector(App app) {
         super(app);
@@ -72,8 +74,8 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         }
     }
 
-    synchronized <T> void registerInjectionListenerClass(Class<T> type, Class<InjectionListener<T>> listenerClass) {
-        List<Class<? extends InjectionListener>> l = injectionListenerClasses.get(type);
+    synchronized <T> void registerDiListener(Class<T> type, Class<DiListener<T>> listenerClass) {
+        List<Class<? extends DiListener>> l = injectionListenerClasses.get(type);
         if (null == l) {
             l = C.newList();
             injectionListenerClasses.put(type, l);
@@ -81,7 +83,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         l.add(listenerClass);
     }
 
-    synchronized List<Class<? extends InjectionListener>> injectionListeners(Class<?> keyClass) {
+    synchronized List<Class<? extends DiListener>> injectionListeners(Class<?> keyClass) {
         return injectionListenerClasses.get(keyClass);
     }
 
@@ -91,7 +93,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         return this;
     }
 
-    synchronized void registerDiBinder(DiBinder binder) {
+    public synchronized void registerDiBinder(DiBinder binder) {
         if (null == injector) {
             binders.put(binder.targetClass(), binder);
         } else {
@@ -167,6 +169,12 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                                 @Override
                                 public EventBus get() {
                                     return app().eventBus();
+                                }
+                            });
+                            bind(AppJobManager.class).toProvider(new Provider<AppJobManager>() {
+                                @Override
+                                public AppJobManager get() {
+                                    return app().jobManager();
                                 }
                             });
                             for (final Class key: binders.keySet()) {

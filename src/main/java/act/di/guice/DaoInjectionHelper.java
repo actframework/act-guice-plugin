@@ -2,6 +2,9 @@ package act.di.guice;
 
 import act.app.App;
 import act.db.Dao;
+import act.db.di.DaoInjectionListener;
+import act.db.di.DaoInjectionListenerCache;
+import act.di.DiListener;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
@@ -10,12 +13,10 @@ import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import org.osgl.$;
-import org.osgl.util.C;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 public class DaoInjectionHelper implements Module, TypeListener {
 
@@ -53,17 +54,22 @@ public class DaoInjectionHelper implements Module, TypeListener {
                 $.T2<Class, Class> key = $.T2(rawType, componentClass);
                 DaoInjectionListener listener = cache.get(key);
                 if (null == listener) {
-                    List<Class<? extends InjectionListener>> lcs = gdi.injectionListeners(Dao.class);
+                    List<Class<? extends DiListener>> lcs = gdi.injectionListeners(Dao.class);
                     if (null != lcs) {
-                        for (Class<? extends InjectionListener> c: lcs) {
-                            InjectionListener l = app.newInstance(c);
+                        for (Class<? extends DiListener> c: lcs) {
+                            DiListener l = app.newInstance(c);
                             if (l instanceof DaoInjectionListener) {
                                 DaoInjectionListener dil = $.cast(l);
                                 if (dil.targetDaoType().isAssignableFrom(rawType)) {
                                     dil.modelType(componentClass);
                                     cache.put(key, dil);
-                                    listener = dil;
-                                    InjectionListener<I> listener1 = $.cast(listener);
+                                    final DaoInjectionListener daoInjectionListener = dil;
+                                    InjectionListener<I> listener1 = new InjectionListener<I>() {
+                                        @Override
+                                        public void afterInjection(I injectee) {
+                                            daoInjectionListener.afterInjection((Dao)injectee);
+                                        }
+                                    };
                                     encounter.register(listener1);
                                     break;
                                 }

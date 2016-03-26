@@ -3,6 +3,7 @@ package act.di.guice;
 import act.app.App;
 import act.app.event.AppEventId;
 import act.db.Dao;
+import act.db.di.DaoInjectionListener;
 import act.util.SubTypeFinder;
 import org.osgl.$;
 
@@ -18,7 +19,7 @@ public class DaoInjectionListenerFinder extends SubTypeFinder<DaoInjectionListen
             @Override
             public void run() {
                 GuiceDependencyInjector gdi = $.cast(app.injector());
-                gdi.registerInjectionListenerClass(Dao.class, (Class)aClass);
+                gdi.registerDiListener(Dao.class, (Class)aClass);
             }
         });
     }
