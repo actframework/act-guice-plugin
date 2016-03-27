@@ -15,3 +15,5 @@ In your `pom.xml` add the following dependency:
 ```
 
 Note you should not use this plugin along with [ActFramework Feather plugin](https://github.com/actframework/act-feather).
+
+For more information please refer to [ActFramework Dependency Injection](https://github.com/actframework/act-doc/blob/master/en/di.md)
