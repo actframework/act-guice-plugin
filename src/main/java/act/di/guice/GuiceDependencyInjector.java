@@ -5,20 +5,17 @@ import act.app.ActionContext;
 import act.app.App;
 import act.app.CliContext;
 import act.app.event.AppEventId;
-import act.app.event.AppEventListener;
 import act.app.util.AppCrypto;
 import act.conf.AppConfig;
 import act.di.DependencyInjector;
 import act.di.DependencyInjectorBase;
-import act.di.DiBinder;
-import act.di.DiListener;
+import act.di.DependencyInjectionBinder;
+import act.di.DependencyInjectionListener;
 import act.event.AppEventListenerBase;
 import act.event.EventBus;
-import act.job.AppJobManager;
 import act.mail.MailerContext;
 import act.util.ActContext;
 import com.google.inject.*;
-import com.google.inject.spi.InjectionListener;
 import org.osgl.$;
 import org.osgl.util.C;
 import org.osgl.util.E;
@@ -35,10 +32,9 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
 
     volatile Injector injector;
     List<Module> modules = C.newList();
-    private Map<Class, DiBinder> binders = C.newMap();
     // store binder mapping after the injector has been created
-    private Map<Class, DiBinder> additionalBinders = C.newMap();
-    private Map<Class, List<Class<? extends DiListener>>> injectionListenerClasses = C.newMap();
+    private Map<Class, DependencyInjectionBinder> additionalBinders = C.newMap();
+    private Map<Class, List<Class<? extends DependencyInjectionListener>>> injectionListenerClasses = C.newMap();
 
     public GuiceDependencyInjector(App app) {
         super(app);
@@ -74,31 +70,22 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         }
     }
 
-    synchronized <T> void registerDiListener(Class<T> type, Class<DiListener<T>> listenerClass) {
-        List<Class<? extends DiListener>> l = injectionListenerClasses.get(type);
-        if (null == l) {
-            l = C.newList();
-            injectionListenerClasses.put(type, l);
-        }
-        l.add(listenerClass);
-    }
-
-    synchronized List<Class<? extends DiListener>> injectionListeners(Class<?> keyClass) {
-        return injectionListenerClasses.get(keyClass);
-    }
-
     @Override
     public DependencyInjector<GuiceDependencyInjector> createContextAwareInjector(ActContext appContext) {
         // Now appContext local is always stored appContext.saveLocal();
         return this;
     }
 
-    public synchronized void registerDiBinder(DiBinder binder) {
+    public synchronized void registerDiBinder(DependencyInjectionBinder binder) {
         if (null == injector) {
-            binders.put(binder.targetClass(), binder);
+            super.registerDiBinder(binder);
         } else {
             additionalBinders.put(binder.targetClass(), binder);
         }
+    }
+
+    boolean interestedIn(Class c) {
+        return listeners.containsKey(c);
     }
 
     private synchronized void processAdditionalBinders() {
@@ -125,7 +112,7 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
         if (null == injector) {
             synchronized (this) {
                 if (null == injector) {
-                    final Module daoHelper = new DaoInjectionHelper(GuiceDependencyInjector.this);
+                    final Module daoHelper = new InjectionListenerAdaptor(GuiceDependencyInjector.this);
                     AbstractModule tempModule = new AbstractModule() {
                         @Override
                         protected void configure() {
@@ -169,12 +156,6 @@ public class GuiceDependencyInjector extends DependencyInjectorBase<GuiceDepende
                                 @Override
                                 public EventBus get() {
                                     return app().eventBus();
-                                }
-                            });
-                            bind(AppJobManager.class).toProvider(new Provider<AppJobManager>() {
-                                @Override
-                                public AppJobManager get() {
-                                    return app().jobManager();
                                 }
                             });
                             for (final Class key: binders.keySet()) {
